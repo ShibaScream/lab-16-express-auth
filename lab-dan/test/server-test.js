@@ -12,6 +12,7 @@ let server = undefined
 
 let username = 'tester'
 let password = 'test'
+let email = 'test@test.com'
 let token = ''
 
 describe('authentication app', function() {
@@ -23,12 +24,12 @@ describe('authentication app', function() {
     })
   })
 
-  describe('POST /register', function() {
+  describe('POST /signup', function() {
     it('should post and return a username but no password', function(done) {
       chai
         .request(app)
-        .post('/register')
-        .send({username: username, password: password})
+        .post('/api/signup')
+        .send({username: username, password: password, email: email})
         .end(function(err, res) {
           let data = JSON.parse(res.text)
           expect(err).to.be.null
@@ -42,8 +43,8 @@ describe('authentication app', function() {
     it('should fail if sent the same username', function(done) {
       chai
         .request(app)
-        .post('/register')
-        .send({username: username, password: password})
+        .post('/api/signup')
+        .send({username: username, password: password, email: email})
         .end(function(err, res) {
           expect(res).to.have.status(500)
           done()
@@ -53,7 +54,7 @@ describe('authentication app', function() {
     it('should fail if sent incomplete data', function(done) {
       chai
         .request(app)
-        .post('/register')
+        .post('/api/signup')
         .send({password: password})
         .end(function(err, res) {
           expect(res).to.have.status(400)
@@ -66,7 +67,7 @@ describe('authentication app', function() {
     it('should fail if wrong credentials', function(done) {
       chai
         .request(app)
-        .post('/login')
+        .post('/api/login')
         .auth(username, 'badpass')
         .end(function(err, res) {
           expect(res).to.have.status(401)
@@ -76,7 +77,7 @@ describe('authentication app', function() {
     it('should post and return a token', function(done) {
       chai
         .request(app)
-        .post('/login')
+        .post('/api/login')
         .auth(username, password)
         .end(function(err, res) {
           expect(err).to.be.null
@@ -92,7 +93,7 @@ describe('authentication app', function() {
     it('should only return user\'s info for any user other than Admin', function(done) {
       chai
         .request(app)
-        .get('/users')
+        .get('/api/users')
         .set('authorization', `Bearer ${token}`)
         .end(function(err, res) {
           expect(res).to.have.status(200)
@@ -107,7 +108,7 @@ describe('authentication app', function() {
     it('should return user info but no password', function(done) {
       chai
         .request(app)
-        .get(`/users/${username}`)
+        .get(`/api/users/${username}`)
         .set('Authorization', `Bearer ${token}`)
         .end(function(err, res) {
           let data = JSON.parse(res.text)
@@ -121,7 +122,7 @@ describe('authentication app', function() {
     it('should fail if not authorized user', function(done) {
       chai
         .request(app)
-        .get('/users/Admin')
+        .get('/api/users/Admin')
         .set('Authorization', `Bearer ${token}`)
         .end(function(err, res) {
           expect(res).to.have.status(403)
@@ -133,10 +134,10 @@ describe('authentication app', function() {
       let fakeToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoidGVzdCIsImlhdCI6MTQ4NTA0MzAxMiwiZXhwIjoxNDg1MTI5NDEyfQ.yuoLmDam8mrW6YAkleheEONWCmUEjFGwdEZ2-sJZZDQ'
       chai
         .request(app)
-        .get(`/users/${username}`)
+        .get(`/api/users/${username}`)
         .set('Authorization', `Bearer ${fakeToken}`)
         .end(function(err, res) {
-          expect(res).to.have.status(403)
+          expect(res).to.have.status(500)
           done()
         })
     })

@@ -13,8 +13,8 @@ module.exports = (router) => {
     res.json({msg: 'this is Dan\'s authentication app!'})
   })
 
-  router.post('/register', jsonParser, (req, res, next) => {
-    if (!req.body.username || !req.body.password) {
+  router.post('/api/signup', jsonParser, (req, res, next) => {
+    if (!req.body.username || !req.body.password || !req.body.email) {
       return next(createError(400, 'Bad request'))
     }
     if (req.body.username.toLowerCase() === 'admin') {
@@ -23,26 +23,20 @@ module.exports = (router) => {
     let newUser = new User(req.body)
     newUser
       .hashAndStorePassword(newUser.password)
-      .then(user => {
-        user
-          .save()
-          .then(user => {
-            user.password = undefined
-            res.json(user)
-          })
-          .catch(next)
-      })
+      .then(user => user.save())
+      .then(user => user.generateToken())
+      .then(user => res.json(user))
       .catch(next)
   })
 
-  router.post('/login', basicAuth, (req, res, next) => {
+  router.post('/api/login', basicAuth, (req, res, next) => {
     req.user
       .generateToken()
-      .then(token => res.json({token: token}))
+      .then(user => res.json(user))
       .catch(next)
   })
 
-  router.get('/users', bearerAuth, (req, res, next) => {
+  router.get('/api/users', bearerAuth, (req, res, next) => {
     if(req.user.username.toLowerCase() === 'admin') {
       console.log('returning admin level details')
       User
@@ -58,7 +52,7 @@ module.exports = (router) => {
     }
   })
 
-  router.get('/users/:user', bearerAuth, (req, res, next) => {
+  router.get('/api/users/:user', bearerAuth, (req, res, next) => {
     if (req.user.username !== req.params.user && req.user.username !== 'Admin') {
       return next(createError(403, 'Unauthorized'))
     }

@@ -4,16 +4,19 @@ const Express = require('express')
 const router = Express.Router()
 const morgan = require('morgan')
 const mongoose = require('mongoose')
+const cors = require('cors')
 const app = Express()
 const User = require('./model/user')
+require('dotenv').load()
 app.use(morgan('dev'))
+app.use(cors())
 
 const httpErrors = require('./lib/httpErrors')
 
-const PORT = process.env.PORT || 3000
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost/authentication'
+const PORT = process.env.PORT
+const MONGO_URI = process.env.MONGO_URI
 
-mongoose.Promise = Promise
+mongoose.Promise = global.Promise
 mongoose.connect(MONGO_URI).then(() => {
   // THIS WHOLE THING COULD BE A SEPARATE MODULE...BUT FOR NOW HERE IT IS
   console.log(`Mongo connected via ${MONGO_URI}`)
@@ -24,7 +27,7 @@ mongoose.connect(MONGO_URI).then(() => {
       // THE DEFAULT ADMIN_PASS IS ONLY FOR DEVELOPMENT PURPOSES
       let adminSeed = new User({
         username: 'Admin',
-        password: process.env.ADMIN_PASS || '1234_admin'
+        password: process.env.ADMIN_PASS
       })
       adminSeed
         .hashAndStorePassword(adminSeed.password)

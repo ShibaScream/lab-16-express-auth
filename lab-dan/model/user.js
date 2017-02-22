@@ -9,6 +9,7 @@ let devKey = 'dev'
 let userSchema = mongoose.Schema({
   username: {type: String, required: true, unique: true},
   password: {type: String, required: true},
+  email: {type: String, require: true}
 }, {timestamp: true})
 
 // DO NOT USE AN ARROW FUNCTION ON MONOGOOSE MODELS
@@ -34,7 +35,10 @@ userSchema.methods.generateToken = function () {
     }
     jwt.sign(payload, process.env.SECRET || devKey, { expiresIn: '1d' }, (err, token) => {
       if (err) return reject(err)
-      resolve(token)
+      let user = this.toObject()
+      user.password = undefined
+      user.token = token
+      resolve(user)
     })
   })
 }
